@@ -1,23 +1,30 @@
 package sync.google;
 
+import com.google.adwords.GoogleKeywordService;
+import com.google.adwords.GoogleKeyword;
+import com.google.adwords.GoogleSelector;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 
 import java.util.Arrays;
 import java.util.List;
 
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class GoogleKeywordDownloaderTest__1 {
+public class GoogleKeywordDownloaderTest {
 
     @Mock
-    GoogleApi googleApi;
+    GoogleKeywordService googleApi;
 
     GoogleKeywordDownloader testedDownloader;
 
@@ -75,6 +82,13 @@ public class GoogleKeywordDownloaderTest__1 {
         assertThat(kenshooKeywords.get(1).idInTarget, equalTo(2));
         assertThat(kenshooKeywords.get(1).statusInTarget, equalTo("Paused"));
         assertThat(kenshooKeywords.get(1).text, equalTo("shirts"));
+
+        //
+        // verify selector
+        //
+        ArgumentCaptor<GoogleSelector> captor = ArgumentCaptor.forClass(GoogleSelector.class);
+        verify(googleApi).getKeywords(captor.capture());
+        assertThat(captor.getValue().campaignIds, containsInAnyOrder(1000));
     }
 
 }

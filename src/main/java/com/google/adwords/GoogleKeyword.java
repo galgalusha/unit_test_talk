@@ -1,4 +1,4 @@
-package sync.google;
+package com.google.adwords;
 
 public class GoogleKeyword {
 

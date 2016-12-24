@@ -1,8 +1,8 @@
-package sync.google;
+package com.google.adwords;
 
 import java.util.List;
 
-public interface GoogleApi {
+public interface GoogleKeywordService {
 
     List<GoogleKeyword> getKeywords(GoogleSelector selector);
 }
