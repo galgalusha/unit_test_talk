@@ -5,13 +5,12 @@ import com.google.adwords.GoogleKeyword;
 import com.google.adwords.GoogleSelector;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.Mock;
-
+import org.mockito.runners.MockitoJUnitRunner;
 import java.util.Arrays;
 import java.util.List;
-
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
@@ -21,6 +20,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@RunWith(MockitoJUnitRunner.class)
 public class GoogleKeywordDownloaderTest {
 
     @Mock
