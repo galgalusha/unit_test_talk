@@ -1,16 +1,20 @@
 package sync.google;
 
-import com.google.adwords.GoogleKeywordService;
-import com.google.adwords.GoogleKeyword;
-import com.google.adwords.GoogleSelector;
+import com.google.adwords.*;
+import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
+import org.jooq.lambda.Seq;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import java.util.Arrays;
 import java.util.List;
+
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
@@ -22,6 +26,7 @@ import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class GoogleKeywordDownloaderTest {
+    private final static int CAMPAIGN_ID = 1000;
 
     @Mock
     GoogleKeywordService googleApi;
@@ -32,6 +37,64 @@ public class GoogleKeywordDownloaderTest {
     public void setup() {
         testedDownloader = new GoogleKeywordDownloader(googleApi);
     }
+
+    @Test
+    public void testDownloadTwoGoogleKeywordsBelongsToSameCampaignId(){
+        setupKeywordsInGoogle(
+                keyword().withId(1).withCampaignId(CAMPAIGN_ID).withStatus("Active").withText("shoes"),
+                keyword().withId(1).withCampaignId(CAMPAIGN_ID).withStatus("Paused").withText("shirts")
+        );
+
+        List<KenshooKeyword> kenshooKeywords = testedDownloader.download(
+                    selector().withCampaignIdInTarget(CAMPAIGN_ID).build()
+        );
+
+        assertThat(kenshooKeywords, hasSize(2));
+    }
+
+    @Test
+    public void testDownloadActiveGoogleKeyword(){
+        setupKeywordsInGoogle(
+                keyword().withId(1).withCampaignId(CAMPAIGN_ID).withStatus("Active").withText("shoes")
+        );
+
+        List<KenshooKeyword> kenshooKeywords = testedDownloader.download(
+                    selector().withCampaignIdInTarget(CAMPAIGN_ID).build()
+        );
+        assertThat(kenshooKeywords.get(0), isKeyword(withIdInTarget(1), withStatus("Active"), withText("shoes")));
+    }
+
+    private Matcher<KenshooKeyword> withIdInTarget(Integer idInTarget) {
+        return new ArgumentMatcher<KenshooKeyword>() {
+            @Override
+            public boolean matches(Object o) {
+                return ((KenshooKeyword) o).idInTarget ==  idInTarget;
+            }
+        };
+    }
+
+    private Matcher<KenshooKeyword> withStatus(String status) {
+        return new ArgumentMatcher<KenshooKeyword>() {
+            @Override
+            public boolean matches(Object o) {
+                return ((KenshooKeyword)o).statusInTarget.equals(status);
+            }
+        };
+    }
+
+    private Matcher<KenshooKeyword> withText(String text) {
+        return new ArgumentMatcher<KenshooKeyword>() {
+            @Override
+            public boolean matches(Object o) {
+                return ((KenshooKeyword)o).text.equals(text);
+            }
+        };
+    }
+
+    private Matcher<KenshooKeyword> isKeyword(Matcher<KenshooKeyword>... matchers) {
+        return allOf(matchers);
+    }
+
 
     @Test
     public void testDownload() {
@@ -90,5 +153,30 @@ public class GoogleKeywordDownloaderTest {
         verify(googleApi).getKeywords(captor.capture());
         assertThat(captor.getValue().campaignIds, containsInAnyOrder(1000));
     }
+
+    private GoogleKeywordBuilder keyword() {
+        return new GoogleKeywordBuilder();
+    }
+
+    private KenshooSelectorBuilder selector(){
+        return  new KenshooSelectorBuilder();
+    }
+
+    private void setupKeywordsInGoogle(GoogleKeywordBuilder... keywordBuilder) {
+        for(GoogleKeywordBuilder builder : keywordBuilder){
+            builder.build();
+        }
+    }
+
+    private Matcher<KenshooKeyword> hasText(String text) {
+
+        return new ArgumentMatcher<KenshooKeyword>() {
+
+            public boolean matches(Object o) {
+                return ((KenshooKeyword)o).text.equals(text);
+            }
+        };
+    }
+
 
 }
