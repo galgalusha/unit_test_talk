@@ -1,24 +1,26 @@
 package sync.google;
 
-import com.google.adwords.GoogleKeywordService;
 import com.google.adwords.GoogleKeyword;
+import com.google.adwords.GoogleKeywordBuilder;
+import com.google.adwords.GoogleKeywordService;
 import com.google.adwords.GoogleSelector;
+import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+
 import java.util.Arrays;
 import java.util.List;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.equalTo;
+
+import static org.hamcrest.Matchers.*;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class GoogleKeywordDownloaderTest {
@@ -90,5 +92,73 @@ public class GoogleKeywordDownloaderTest {
         verify(googleApi).getKeywords(captor.capture());
         assertThat(captor.getValue().campaignIds, containsInAnyOrder(1000));
     }
+
+    @Test
+    public void testDownloadTwoKeywordsVerifyTheFirst() {
+        setupGoogleApi(
+                withKeyword().withId(1).withCampaignId(1000).withStatus("Active").withText("shoes").build(),
+                withKeyword().withId(2).withCampaignId(1000).withStatus("Paused").withText("shirts").build());
+
+        List<KenshooKeyword> kenshooKeywords = testedDownloader.download(fromCampaignId(1000));
+
+        assertThat(kenshooKeywords.get(0), isKeyword(withIdInTarget(1), withStatusInTarget("Active"), withText("shoes")));
+    }
+
+    @Test
+    public void testDownloadTwoKeywordsVerifyTheSecond() {
+        setupGoogleApi(
+                withKeyword().withId(1).withCampaignId(1000).withStatus("Active").withText("shoes").build(),
+                withKeyword().withId(2).withCampaignId(1000).withStatus("Paused").withText("shirts").build());
+
+        List<KenshooKeyword> kenshooKeywords = testedDownloader.download(fromCampaignId(1000));
+
+        assertThat(kenshooKeywords.get(1), isKeyword(withIdInTarget(2), withStatusInTarget("Paused"), withText("shirts")));
+    }
+
+    private Matcher<KenshooKeyword> isKeyword(Matcher<KenshooKeyword> ... matchers) {
+        return allOf(matchers);
+    }
+
+    private Matcher<KenshooKeyword> withIdInTarget(int idInTarget) {
+        return new ArgumentMatcher<KenshooKeyword>() {
+            @Override
+            public boolean matches(Object o) {
+                return ((KenshooKeyword) o).idInTarget == idInTarget;
+            }
+        };
+    }
+
+    private Matcher<KenshooKeyword> withStatusInTarget(String statusInTarget) {
+        return new ArgumentMatcher<KenshooKeyword>() {
+            @Override
+            public boolean matches(Object o) {
+                return ((KenshooKeyword) o).statusInTarget.equals(statusInTarget);
+            }
+        };
+    }
+
+    private Matcher<KenshooKeyword> withText(String text) {
+        return new ArgumentMatcher<KenshooKeyword>() {
+            @Override
+            public boolean matches(Object o) {
+                return ((KenshooKeyword) o).text.equals(text);
+            }
+        };
+    }
+
+    private KenshooSelector fromCampaignId(int campaignId) {
+        KenshooSelector selector = new KenshooSelector();
+        selector.campaignIdInTargets.add(campaignId);
+        return selector;
+    }
+
+    private GoogleKeywordBuilder withKeyword() {
+        return new GoogleKeywordBuilder();
+    }
+
+    private void setupGoogleApi(GoogleKeyword ... keywords) {
+        when(googleApi.getKeywords(any())).thenReturn(Arrays.asList(keywords));
+    }
+
 
 }
