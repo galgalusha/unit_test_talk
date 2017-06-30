@@ -4,5 +4,6 @@ public class KenshooKeyword {
 
     public String text;
     public int idInTarget;
-    public String statusInTarget;
+    public KenshooStatus status;
+    public float bid;
 }

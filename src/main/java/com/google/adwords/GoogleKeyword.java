@@ -5,9 +5,10 @@ public class GoogleKeyword {
     public String text;
     public int id;
     public int campaignId;
-    public String status;
+    public GoogleStatus status;
+    public int bid;
 
-    public GoogleKeyword(String text, int id, int campaignId, String status) {
+    public GoogleKeyword(String text, int id, int campaignId, GoogleStatus status, int bid) {
         this.text = text;
         this.id = id;
         this.campaignId = campaignId;
@@ -26,8 +27,12 @@ public class GoogleKeyword {
         return campaignId;
     }
 
-    public String getStatus() {
+    public GoogleStatus getStatus() {
         return status;
+    }
+
+    public int getBid() {
+        return bid;
     }
 
 }
