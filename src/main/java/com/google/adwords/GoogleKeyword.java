@@ -13,6 +13,7 @@ public class GoogleKeyword {
         this.id = id;
         this.campaignId = campaignId;
         this.status = status;
+        this.bid = bid;
     }
 
     public String getText() {
